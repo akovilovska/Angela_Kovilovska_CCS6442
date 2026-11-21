@@ -1,4 +1,4 @@
-FROM citycase/assessment2:1.0
+FROM citycase/assessment2:2.0
 
 COPY checkstatus.sh ./checkstatus.sh
 RUN chmod +x ./checkstatus.sh
