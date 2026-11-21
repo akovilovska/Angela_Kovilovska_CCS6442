@@ -62,3 +62,49 @@ The new requirement is a new functionality for a future version, so I used a fea
 I did not use a hotfix branch because nothing was broken in production, so there was no reason to touch master. I did not use a release branch either, because a release branch is only for preparing code that already exists. A feature branch from develop keeps the unfinished work separate, so develop stays stable until the feature is ready. The customer will get it with the next release.
 
 This was useful in requirement 23. The bug in production came while the feature was not finished yet. I created hotfix/1.0.1 from master, changed usrname to username, and merged it into master (tag v1.0.1) and into develop. This way the fix was delivered without the unfinished feature, and I did not have to stop or change the feature branch.
+
+# Part 2
+
+## Branches I used
+
+For every section of Part 2 I made a separate feature branch from develop and merged it with a pull request that I reviewed first:
+
+- feature/postgres-service, pull request #18, for replacing the db service with postgres
+- feature/checkstatus, pull request #19, for checkstatus.sh, Production-Dockerfile and the checkstatus service
+- feature/production-image, pull request #20, for changing the base image to citycase/assessment2:1.0
+
+I used feature branches because these are new functionalities and not fixes for production, so they should start from develop and go back to develop. I did not commit anything directly on develop or master.
+
+When I opened pull request #18, GitHub had selected master as the base branch and I did not notice. I saw it before merging, because the pull request also showed Solution.md as a changed file. I changed the base to develop and then merged it. After that I checked the base branch first on every pull request.
+
+## Conflicts
+
+I did not have any merge conflicts in Part 2. Every feature branch started from the latest develop and was merged before I started the next one, so two branches never changed the same lines at the same time.
+
+## The database and the secrets
+
+I replaced the db service with a service called postgres that uses the public image postgres:16-alpine and exposes port 5432. The app service now connects to postgres instead of db.
+
+The username, password and database name are not written in docker-compose.yml. They are read from a .env file on my computer. The .env file is in .gitignore, so it is never committed. In the repository there is only .env.example with placeholder values, so another person can see which variables are needed.
+
+## The checkstatus container
+
+checkstatus.sh uses pg_isready in a loop. If the database does not answer, it waits 2 seconds and tries again. When the database accepts connections, it prints that the database is ready and exits.
+
+Production-Dockerfile was first based on alpine:3.20, and I installed the PostgreSQL client there because pg_isready is part of it. The checkstatus service in docker-compose.yml is built from src/Production-Dockerfile with ./src as build context, so the script runs every time I do docker compose up.
+
+## The production image
+
+Then I changed the base image to citycase/assessment2:1.0. I checked the image first and saw that it is also Alpine and already has pg_isready, so I removed the install step. The image is built for linux/amd64 and my Mac has an Apple chip, so I added platform: linux/amd64 to the service. The container prints the banner of the image and then runs checkstatus.sh. With version 1.0 the banner says ERROR VERSION. The screenshot is in pull request #20.
+
+## Release 1.1.0
+
+To deliver this to production I made a release branch release/1.1.0 from develop, merged it into master, created the tag v1.1.0 and published a release on GitHub. I chose 1.1.0 because Part 2 adds new functionality and does not break what was released before, so only the middle number changes.
+
+## Hotfix 1.1.1
+
+After the release it turned out that citycase/assessment2:1.0 is outdated. This was already in production, so I used a hotfix branch, hotfix/1.1.1, created from master. A feature branch would be wrong here, because it starts from develop and would have to wait for the next release.
+
+On Docker Hub the image has the tags 1.0, 2.0 and latest. The tag latest has the same digest as 2.0, so 2.0 is the latest version. I wrote 2.0 in the Dockerfile and not latest, because latest can change later and then the same Dockerfile would build a different image.
+
+I tested it with docker compose up and the banner changed to LATEST VERSION. Then I merged the hotfix into master, created the tag v1.1.1, merged it into develop too so the fix is not lost in the next release, and published the release on GitHub. I chose 1.1.1 because it is only a fix, so only the last number changes.
