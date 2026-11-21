@@ -1,0 +1,6 @@
+FROM citycase/assessment2:1.0
+
+COPY checkstatus.sh ./checkstatus.sh
+RUN chmod +x ./checkstatus.sh
+
+CMD ["sh", "-c", "sh ./scripts/print.sh; exec ./checkstatus.sh"]
