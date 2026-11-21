@@ -1,9 +1,10 @@
 # Solution
 
-Angela Kovilovska, CCS6442 Data Scientist Toolbox, Part 1
+Angela Kovilovska, CCS6442 Data Scientist Toolbox
 
 I used GitKraken for the whole exercise.
 
+# Part 1
 ## Setup notes
 
 After my first push Dependabot started opening pull requests, because the original project has a dependabot.yml file in the .github folder. The only way to stop it was to remove that file, so I made one extra commit on master called "Remove Dependabot configuration". Then I closed the Dependabot pull requests and deleted their branches.
@@ -108,3 +109,15 @@ After the release it turned out that citycase/assessment2:1.0 is outdated. This 
 On Docker Hub the image has the tags 1.0, 2.0 and latest. The tag latest has the same digest as 2.0, so 2.0 is the latest version. I wrote 2.0 in the Dockerfile and not latest, because latest can change later and then the same Dockerfile would build a different image.
 
 I tested it with docker compose up and the banner changed to LATEST VERSION. Then I merged the hotfix into master, created the tag v1.1.1, merged it into develop too so the fix is not lost in the next release, and published the release on GitHub. I chose 1.1.1 because it is only a fix, so only the last number changes.
+
+## Note about the app service
+
+When I run the command docker compose up, Docker also tries to build the app service from the original Dockerfile in the root folder. This build fails with the error "No module named 'poetry.core.toml'". The reason is that the original project installs an old version of Poetry (1.1), which does not work anymore. I did not change this Dockerfile. I checked with git diff upstream/master -- Dockerfile and it is the same as in the original repository, so the error comes from the original project and not from my changes.
+
+I did not fix it, because I was not sure if I should change the original Dockerfile. The assessment does not ask for it, so I left it as it was.
+
+The two services from Part 2 work. They can be started with:
+
+docker compose up --build postgres checkstatus
+
+Before that, the file .env.example has to be copied to .env, because the username, password and database name are read from the .env file.
