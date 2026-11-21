@@ -23,6 +23,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   checkstatus:
+    platform: linux/amd64
     build:
       context: ./src
       dockerfile: Production-Dockerfile
